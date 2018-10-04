@@ -16,6 +16,6 @@ func makeDataStore() (result RecordAccessor, err error) {
 	if err != nil {
 		panic(err)
 	}
-	conn := mongo.NewConnection(mgServer, MONGO_URL_DB, "")
+	conn := mongo.NewConnection(mgServer, MONGO_DB, "")
 	return NewMongo(conn)
 }

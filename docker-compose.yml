@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+  parser:
+    build: ./parser
+    container_name: parser
+    environment:
+      - SAVER_HOST= saver:8080
+      - WORKER_NUMBER=10
+    links:
+      - saver
+
+  saver:
+    build: ./saver
+    container_name: saver
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGO_HOST=mongodb
+      - MONGO_DB=gotest
+    links:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - 27017:27017

@@ -38,7 +38,7 @@ func main() {
 	}
 
 	http.HandleFunc("/receive", receiveHandler)
-	log.Fatal(http.ListenAndServe(":8082", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil)) //todo port must receive from env vars
 }
 
 func receiveHandler(rw http.ResponseWriter, req *http.Request) {
