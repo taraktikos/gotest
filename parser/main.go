@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -20,6 +23,7 @@ type Record struct {
 }
 
 var workerNumber = 10
+var saverEndpoint = "http://localhost:8080/receive" //todo get from env vars
 
 func main() {
 	_, cancel := context.WithCancel(context.Background())
@@ -32,7 +36,7 @@ func main() {
 	}()
 	log.Println("Start parsing")
 
-	queue := make(chan string)    //will contains each line
+	queue := make(chan string, 5) //will contains each line, set buffer size to 5 to avoid overloading receiver
 	workerDone := make(chan bool) //notify if file was processed
 
 	go func() {
@@ -67,6 +71,12 @@ func startWorker(queue chan string, workerDone chan bool) {
 		}
 		log.Printf("Proccessed: %s", record)
 		//pass record to saver
+		//i prefer to use some queue service to communication between servises like this
+		//nsq.io or amazon sqs
+		err = submitRecord(record)
+		if err != nil {
+			log.Printf("Error happened during save record %v, %v", record, err)
+		}
 	}
 
 	workerDone <- true
@@ -84,6 +94,22 @@ func processLine(line string) (*Record, error) {
 		email:  splitted[2],
 		mobile: processPhone(splitted[3]),
 	}, nil
+}
+
+func submitRecord(record *Record) error {
+	payload := new(bytes.Buffer)
+	err := json.NewEncoder(payload).Encode(record)
+	if err != nil {
+		return err
+	}
+	resp, err := http.Post(saverEndpoint, "application/json", payload)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Saver does'n save record resp %v", resp)
+	}
+	return nil
 }
 
 func processPhone(phone string) string {
