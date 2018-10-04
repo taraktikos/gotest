@@ -4,9 +4,11 @@ services:
   parser:
     build: ./parser
     container_name: parser
+      - "/pathtofile:/pahttofile"
     environment:
-      - SAVER_HOST= saver:8080
+      - SAVER_HOST=saver:8080
       - WORKER_NUMBER=10
+      - FILE_PATH=/pahttofile/data.csv
     links:
       - saver
 
@@ -16,6 +18,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - STORAGE_TYPE=mongo
       - MONGO_HOST=mongodb
       - MONGO_DB=gotest
     links:
